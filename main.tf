@@ -97,12 +97,23 @@ resource "aws_ecs_cluster" "basic" {
 resource "aws_ecs_task_definition" "book_manager" {
   family = "aws-test"
 
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = 256
+  memory = 512
   container_definitions = <<EOF
 [
   {
     "name": "simple-python-application",
     "image": "docker.io/aws_test:latest",
-    "memory": 128,
+    "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080
+        }
+    ],
+    "cpu": 256,
+    "memory": 512,
     "environment": [
       { "name": "DB_USER", "value": "${aws_db_instance.basic.username}" },
       { "name": "DB_PASSWORD", "value": "${var.db_password}" },
