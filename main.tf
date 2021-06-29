@@ -85,11 +85,49 @@ resource "aws_db_instance" "basic" {
 }
 
 #
-#resource "aws_ecs_cluster" "basic" {
-#  name = "basic-cluster"
-#
-#  setting {
-#    name  = "containerInsights"
-#    value = "enabled"
-#  }
-#}
+resource "aws_ecs_cluster" "basic" {
+  name = "basic-cluster"
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+}
+
+resource "aws_ecs_task_definition" "book_manager" {
+  family = "aws-test"
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "simple-python-application",
+    "image": "docker.io/aws_test:latest",
+    "memory": 128,
+    "environment": [
+      { "name": "DB_USER", "value": "${aws_db_instance.basic.username}" },
+      { "name": "DB_PASSWORD", "value": "${var.db_password}" },
+      { "name": "DB_HOST", "value": "${aws_db_instance.basic.address}" },
+      { "name": "DB_PORT", "value": "${aws_db_instance.basic.port}" }
+    ]
+  }
+]
+EOF
+}
+
+# { "name": "DB_DB", "value": "${aws_db_instance.basic.port}" }
+
+resource "aws_ecs_service" "book_manager" {
+  name            = "book_manager"
+  cluster         = aws_ecs_cluster.basic.cluster_id
+  task_definition = aws_ecs_task_definition.book_manager.arn
+
+  desired_count = 1
+
+  launch_type     = "FARGATE"
+  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 0
+  network_configuration {
+    subnets = [module.vpc.private_subnets]
+    assign_public_ip = true
+  }
+}

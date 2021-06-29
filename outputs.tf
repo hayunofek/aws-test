@@ -15,3 +15,9 @@ output "rds_username" {
   value       = aws_db_instance.basic.username  
   sensitive   = true
 }
+
+output "ecs_cluster_id" {
+  description = "ECS cluster id"
+  value       = aws_ecs_cluster.basic.id
+  sensitive   = false
+}
