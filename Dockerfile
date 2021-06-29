@@ -2,7 +2,7 @@ FROM python:3.7.10-buster
 
 WORKDIR /app
 
-ADD . .
+ADD app/ .
 
 RUN pip install --no-cache-dir -r ./requirements.txt && chown -R 1001:1001 *
 
