@@ -118,7 +118,7 @@ EOF
 
 resource "aws_ecs_service" "book_manager" {
   name            = "book_manager"
-  cluster         = aws_ecs_cluster.basic.cluster_id
+  cluster         = aws_ecs_cluster.basic.id
   task_definition = aws_ecs_task_definition.book_manager.arn
 
   desired_count = 1
