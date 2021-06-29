@@ -127,7 +127,7 @@ resource "aws_ecs_service" "book_manager" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   network_configuration {
-    subnets = [module.vpc.private_subnets]
+    subnets = module.vpc.private_subnets
     assign_public_ip = true
   }
 }
