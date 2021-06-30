@@ -1,5 +1,3 @@
-import os
-
 from flask import Flask
 import db_utils as db
 
@@ -35,5 +33,5 @@ def delete_book(book_id):
     return "put delete"
 
 @app.route("/")
-def delete_book(book_id):
+def health_check():
     return "ok"
