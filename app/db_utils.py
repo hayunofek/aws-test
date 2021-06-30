@@ -3,7 +3,7 @@ import os
 
 
 def open_connection_and_cursor():
-    connection, cursor = None
+    connection, cursor = None, None
 
     try:
         connection = psycopg2.connect(
