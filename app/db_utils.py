@@ -3,15 +3,15 @@ import os
 
 
 def open_connection_and_cursor():
-    connection = None
+    connection, cursor = None
 
     try:
         connection = psycopg2.connect(
-                    user = os.environ['DB_USER'],
-                    password = os.environ['DB_PASSWORD'],
-                    host = os.environ['DB_HOST'],
-                    port = os.environ['DB_PORT'],
-            )
+            user=os.environ['DB_USER'],
+            password=os.environ['DB_PASSWORD'],
+            host=os.environ['DB_HOST'],
+            port=os.environ['DB_PORT'],
+        )
         cursor = connection.cursor()
     except (Exception, psycopg2.Error) as error:
         print("Error connection to PostgreSQL database", error)
@@ -29,7 +29,7 @@ def close_connection(connection, cursor):
 
 def get_book_from_db(cursor, book_id):
     cursor.execute(f"SELECT ID, name, price FROM books WHERE ID={book_id}")
-    result = cur.fetchone()
+    result = cursor.fetchone()
     return result
 
 

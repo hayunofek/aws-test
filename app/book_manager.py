@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import db_utils as db
 
 connection, cursor = db.open_connection_and_cursor()
