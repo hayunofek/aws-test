@@ -1,6 +1,10 @@
 from flask import Flask
 import db_utils as db
 
+connection, cursor = db.open_connection_and_cursor()
+db.init_db(cursor)
+db.close_connection(connection, cursor)
+
 app = Flask(__name__)
 
 
