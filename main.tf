@@ -93,6 +93,10 @@ resource "aws_ecs_cluster" "basic" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "book_manager" {
+  name = "book_manager"
+}
+
 resource "aws_ecs_task_definition" "book_manager" {
   family = "simple-python-application"
 
@@ -118,7 +122,14 @@ resource "aws_ecs_task_definition" "book_manager" {
       { "name": "DB_PASSWORD", "value": "${var.db_password}" },
       { "name": "DB_HOST", "value": "${aws_db_instance.basic.address}" },
       { "name": "DB_PORT", "value": "${aws_db_instance.basic.port}" }
-    ]
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "eu-west-1",
+        "awslogs-group": "book_manager"
+      }
+    }
   }
 ]
 EOF
