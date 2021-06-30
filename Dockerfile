@@ -8,7 +8,10 @@ RUN pip install --no-cache-dir -r ./requirements.txt && chown -R 1001:1001 *
 
 RUN useradd -u 1001 app
 
-USER 1001
-EXPOSE 8080
+ENV FLASK_APP=book_manager
 
-ENTRYPOINT ["python3", "./db_utils.py"]
+USER 1001
+
+EXPOSE 5000
+
+ENTRYPOINT ["flask", "run", "--host=0.0.0.0"]
