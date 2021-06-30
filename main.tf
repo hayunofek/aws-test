@@ -21,15 +21,14 @@ module "vpc" {
   name                 = "basic"
   cidr                 = "10.0.0.0/16"  
   azs                  = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
-  private_subnets      = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-#  public_subnets       = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]  
+  public_subnets       = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]  
   enable_dns_hostnames = true  
   enable_dns_support   = true
 }
 
 resource "aws_db_subnet_group" "basic" {
   name       = "basic"  
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = module.vpc.public_subnets
   tags = {
     Name = "Basic"
   }
@@ -95,7 +94,7 @@ resource "aws_ecs_cluster" "basic" {
 }
 
 resource "aws_ecs_task_definition" "book_manager" {
-  family = "aws-test"
+  family = "simple-python-application"
 
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -108,8 +107,8 @@ resource "aws_ecs_task_definition" "book_manager" {
     "image": "docker.io/hayunofek/aws_test:latest",
     "portMappings": [
         {
-          "containerPort": 8080,
-          "hostPort": 8080
+          "containerPort": 5000,
+          "hostPort": 5000
         }
     ],
     "cpu": 256,
@@ -127,6 +126,49 @@ EOF
 
 # { "name": "DB_DB", "value": "${aws_db_instance.basic.port}" }
 
+resource "aws_alb" "application_load_balancer" {
+  name               = "book-manager-lb"
+  load_balancer_type = "application"
+  subnets =  module.vpc.public_subnets
+  security_groups = [aws_security_group.load_balancer_security_group.id]
+}
+
+resource "aws_security_group" "load_balancer_security_group" {
+  vpc_id = module.vpc.vpc_id
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb_target_group" "target_group" {
+  name        = "target-group"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = module.vpc.vpc_id
+}
+
+resource "aws_lb_listener" "listener" {
+  load_balancer_arn = aws_alb.application_load_balancer.arn
+  port              = "80"
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.target_group.arn
+  }
+}
+
+
 resource "aws_ecs_service" "book_manager" {
   name            = "book_manager"
   cluster         = aws_ecs_cluster.basic.id
@@ -137,8 +179,34 @@ resource "aws_ecs_service" "book_manager" {
   launch_type     = "FARGATE"
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.target_group.arn
+    container_name   = aws_ecs_task_definition.book_manager.family
+    container_port   = 5000
+  }
+
   network_configuration {
-    subnets = module.vpc.private_subnets
+    subnets = module.vpc.public_subnets
     assign_public_ip = true
+    security_groups  = [aws_security_group.service_security_group.id]
+  }
+}
+
+
+resource "aws_security_group" "service_security_group" {
+  vpc_id = module.vpc.vpc_id
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    security_groups = [aws_security_group.load_balancer_security_group.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
