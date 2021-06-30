@@ -105,7 +105,7 @@ resource "aws_ecs_task_definition" "book_manager" {
 [
   {
     "name": "simple-python-application",
-    "image": "docker.io/aws_test:latest",
+    "image": "docker.io/hayunofek/aws_test:latest",
     "portMappings": [
         {
           "containerPort": 8080,
