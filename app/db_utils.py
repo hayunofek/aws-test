@@ -1,26 +1,41 @@
 import psycopg2
 import os
 
-try:
-    connection = psycopg2.connect(
-            user = os.environ['DB_USER'],
-            password = os.environ['DB_PASSWORD'],
-            host = os.environ['DB_HOST'],
-            port = os.environ['DB_PORT'],
-#            database = os.environ['DB_DB'],
-    )
 
-    cursor = connection.cursor()
-
-    cursor.execute("SELECT version();")
-    record = cursor.fetchone()
-    print(f"You are connect into the - {record}")
-except (Exception, psycopg2.Error) as error:
-    print("Error connection to PostgreSQL database", error)
+def open_connection_and_cursor():
     connection = None
 
-finally:
+    try:
+        connection = psycopg2.connect(
+                    user = os.environ['DB_USER'],
+                    password = os.environ['DB_PASSWORD'],
+                    host = os.environ['DB_HOST'],
+                    port = os.environ['DB_PORT'],
+            )
+        cursor = connection.cursor()
+    except (Exception, psycopg2.Error) as error:
+        print("Error connection to PostgreSQL database", error)
+        connection = None
+
+    return connection, cursor
+
+
+def close_connection(connection, cursor):
     if connection:
-        cursor.close()
+        if cursor:
+            cursor.close()
         connection.close()
-        print("PostgreSQL connection is now closed")
+
+
+def get_book_from_db(cursor, book_id):
+    cursor.execute(f"SELECT ID, name, price FROM books WHERE ID={book_id}")
+    result = cur.fetchone()
+    return result
+
+
+def init_db(cursor):
+    cursor.execute(""" CREATE TABLE IF NOT EXISTS books (
+                       ID INT GENERATED ALWAYS AS IDENTITY,
+                       name VARCHAR NOT NULL,
+                       price VARCHAR NOT NULL,
+                       PRIMARY KEY (ID)) """)
