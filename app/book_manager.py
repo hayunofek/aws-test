@@ -1,3 +1,6 @@
+import os
+
+import psycopg2
 from flask import Flask, request, Response
 import traceback
 import json
@@ -52,6 +55,30 @@ def get_book(book_id):
     finally:
         if connection:
             utils.close_connection(connection, cursor)
+
+
+@app.route("/connect", methods=['GET'])
+def try_to_connect():
+    response = ""
+    connection, cursor = None, None
+    try:
+        connection = psycopg2.connect(
+            user=os.environ['DB_USER'],
+            password=os.environ['DB_PASSWORD'],
+            host=os.environ['DB_HOST'],
+            port=os.environ['DB_PORT'],
+            dbname='postgres'
+        )
+        connection.set_session(autocommit=True)
+        cursor = connection.cursor()
+        response += "connection successfull\n"
+    except (Exception, psycopg2.Error) as error:
+        response += f"DB_USER={os.environ['DB_USER']}, DB_PASSWORD={os.environ['DB_PASSWORD']}," \
+                    f" DB_HOST={os.environ['DB_HOST']}, DB_PORT={os.environ['DB_PORT']}\n"
+        response += f"Error connection to PostgreSQL database, error: {error}\n"
+        connection = None
+
+    return response
 
 
 # POST

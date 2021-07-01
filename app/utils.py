@@ -11,6 +11,7 @@ def open_connection_and_cursor():
             password=os.environ['DB_PASSWORD'],
             host=os.environ['DB_HOST'],
             port=os.environ['DB_PORT'],
+            dbname='postgres'
         )
         connection.set_session(autocommit=True)
         cursor = connection.cursor()
@@ -75,7 +76,8 @@ def init_db(cursor):
 
 def startup_db():
     connection, cursor = open_connection_and_cursor()
-    init_db(cursor)
+    if connection and cursor:
+        init_db(cursor)
     close_connection(connection, cursor)
 
 
